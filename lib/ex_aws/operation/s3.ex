@@ -25,8 +25,10 @@ defmodule ExAws.Operation.S3 do
       headers  = operation.headers
       http_method = operation.http_method
 
+      config = add_bucket_to_host(operation, config)
+
       url = operation
-      |> add_bucket_to_path
+      |> normalize_path
       |> add_resource_to_params
       |> ExAws.Request.Url.build(config)
 
@@ -45,9 +47,14 @@ defmodule ExAws.Operation.S3 do
       fun.(config)
     end
 
-    def add_bucket_to_path(operation) do
-      path = "/#{operation.bucket}/#{operation.path}" |> String.trim_leading("//")
+    def normalize_path(operation) do
+      path = "/#{operation.path}" |> String.trim_leading("//")
       operation |> Map.put(:path, path)
+    end
+
+    def add_bucket_to_host(operation, config) do
+      host = "#{operation.bucket}.#{config.host}"
+      config |> Map.put(:host, host)
     end
 
     def add_resource_to_params( operation) do
